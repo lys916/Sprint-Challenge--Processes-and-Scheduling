@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <dirent.h>
 
-#define PROMPT "lambda-shell$ "
+char *getcwd(char *buf, size_t size);
+
+#define PROMPT "lambda-shellxx$ "
 
 #define MAX_TOKENS 100
 #define COMMANDLINE_BUFSIZE 1024
@@ -99,9 +102,34 @@ int main(void)
         }
 
         #endif
-        
+
         /* Add your code for implementing the shell's logic here */
-        
+
+        int rc = fork();
+
+        if (rc < 0) {
+            fprintf(stderr, "fork failed \n");
+            exit(1);
+        } else if (rc == 0) {
+            if (strcmp(args[0], "cd") == 0 && args_count == 2) {
+                // call chdir
+                int n = chdir(args[1]);
+
+                // print current dir after changed
+                char cwd[1024];
+                if (getcwd(cwd, sizeof(cwd)) != NULL){
+                    fprintf(stdout, "%s\n", cwd);
+                }
+
+                if(n == -1){
+                    printf("chdir: No such file or directory\n");
+                }
+                continue;
+            }
+            execvp(args[0], args);
+        }else{
+            waitpid(rc, NULL, 0);
+        }
     }
 
     return 0;
